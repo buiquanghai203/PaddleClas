@@ -38,12 +38,15 @@ def search_train(search_list,
                 model_name = search_i
         res_list = []
         for j in range(search_times):
-            output_dir = "{}/{}_{}_{}".format(base_output_dir, search_key,
-                                              search_i, j).replace(".", "_")
+            # output_dir = "{}/{}_{}_{}".format(base_output_dir, search_key,
+            #                                   search_i, j).replace(".", "_")
+            output_dir = os.path.join(base_output_dir, f"{search_key}_{search_i}_{j}".replace(".", "_"), model_name)
+            os.makedirs(output_dir, exist_ok=True)
             program += ["-o", "Global.output_dir={}".format(output_dir)]
             process = subprocess.Popen(program)
             process.communicate()
-            res = get_result("{}/{}".format(output_dir, model_name))
+            res = get_result(output_dir)
+            #res = get_result("{}/{}".format(output_dir, model_name))
             res_list.append(res)
         all_result[str(search_i)] = res_list
 
