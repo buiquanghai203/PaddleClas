@@ -64,7 +64,7 @@ def search_strategy():
     gpus = configs["gpus"]
     gpus = ",".join([str(i) for i in gpus])
     base_program = [
-        "python3.7", "-m", "paddle.distributed.launch",
+        "python", "-m", "paddle.distributed.launch",
         "--gpus={}".format(gpus), "tools/train.py", "-c", base_config_file
     ]
     base_output_dir = configs["output_dir"]
