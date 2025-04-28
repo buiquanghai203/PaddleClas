@@ -5,10 +5,10 @@ gpus: 0,1
 output_dir: output/search_vehicle_attr
 search_times: 1
 search_dict:
-  - search_key: lrs
-    replace_config:
-      - Optimizer.lr.learning_rate
-    search_values: [0.0075, 0.01, 0.0125]
+  # - search_key: lrs
+  #   replace_config:
+  #     - Optimizer.lr.learning_rate
+  #   search_values: [0.0075, 0.01, 0.0125]
   - search_key: ra_probs
     replace_config:
       - DataLoader.Train.dataset.transform_ops.2.TimmAutoAugment.prob
