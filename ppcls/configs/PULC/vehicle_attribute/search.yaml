@@ -9,11 +9,10 @@ search_dict:
   #   replace_config:
   #     - Optimizer.lr.learning_rate
   #   search_values: [0.0075, 0.01, 0.0125]
-  - search_key: ra_probs
-    replace_config:
-      - DataLoader.Train.dataset.transform_ops.2.TimmAutoAugment.prob
-    #search_values: [0.0, 0.1, 0.5]
-    search_values: [ 0.5]
+  # - search_key: ra_probs
+  #   replace_config:
+  #     - DataLoader.Train.dataset.transform_ops.2.TimmAutoAugment.prob
+  #   search_values: [0.0, 0.1, 0.5]
   - search_key: re_probs
     replace_config:
       - DataLoader.Train.dataset.transform_ops.7.RandomErasing.EPSILON
