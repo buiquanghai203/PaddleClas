@@ -1,5 +1,5 @@
-base_config_file: ppcls/configs/PULC/vehicle_attr/PPLCNet_x1_0_search.yaml
-distill_config_file: ppcls/configs/PULC/vehicle_attr/PPLCNet_x1_0_distillation.yaml
+base_config_file: ppcls/configs/PULC/vehicle_attribute/PPLCNet_x1_0_search.yaml
+distill_config_file: ppcls/configs/PULC/vehicle_attribute/PPLCNet_x1_0_distillation.yaml
 
 gpus: 0,1
 output_dir: output/search_vehicle_attr
