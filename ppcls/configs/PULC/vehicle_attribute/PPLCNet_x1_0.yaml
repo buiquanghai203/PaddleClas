@@ -1,7 +1,7 @@
 # global configs
 Global:
   checkpoints: null
-  pretrained_model:  './output/pre_train'
+  pretrained_model:  './output/resnet'
   output_dir: "./output/"
   device: "gpu"
   save_interval: 5
