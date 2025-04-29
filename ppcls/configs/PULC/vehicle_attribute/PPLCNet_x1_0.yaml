@@ -7,7 +7,7 @@ Global:
   save_interval: 5
   eval_during_train: True
   eval_interval: 1
-  epochs: 30
+  epochs: 60
   print_batch_step: 20
   use_visualdl: False
   # used for static mode and model export
@@ -63,7 +63,7 @@ DataLoader:
         - ResizeImage:
             size: [256, 192]
         - TimmAutoAugment:
-            prob: 0.0
+            prob: 0.1
             config_str: rand-m9-mstd0.5-inc1
             interpolation: bicubic
             img_size: [256, 192]
