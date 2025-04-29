@@ -63,7 +63,7 @@ DataLoader:
         - ResizeImage:
             size: [256, 192]
         - TimmAutoAugment:
-            prob: 0.5
+            prob: 0
             config_str: rand-m9-mstd0.5-inc1
             interpolation: bicubic
             img_size: [256, 192]
