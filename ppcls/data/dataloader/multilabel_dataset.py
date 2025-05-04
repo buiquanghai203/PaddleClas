@@ -35,10 +35,10 @@ class MultiLabelDataset(CommonDataset):
             lines = fd.readlines()
             for l in lines:
                 l = l.strip().split("\t")
-                #self.images.append(os.path.join(self._img_root, l[0]))
+                self.images.append(os.path.join(self._img_root, l[0]))
 
-                img_name = l[0].replace('\\', '/')  # xử lý nếu đường dẫn có \
-                self.images.append(os.path.join(self._img_root, img_name))
+                # img_name = l[0].replace('\\', '/')  # xử lý nếu đường dẫn có \
+                # self.images.append(os.path.join(self._img_root, img_name))
                 labels = l[1].split(',')
                 labels = [np.int64(i) for i in labels]
 
