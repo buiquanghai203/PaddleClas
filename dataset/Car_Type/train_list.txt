@@ -4747,4 +4747,3 @@ image_train\mpv99_jpg.rf.f22ee4c0a2baca46e0022028a4e6281b.jpg	0,0,0,0,0,0,1,0,0,
 image_train\mpv9_jpg.rf.0b4d8a475e767d2b752108274188bb37.jpg	0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0
 image_train\mpv9_jpg.rf.32a0c52bb363863f969293ef937b7078.jpg	0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0
 image_train\mpv9_jpg.rf.a36a4ebf2095fcb0f05727001d43cb02.jpg	0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0
-
