@@ -43,8 +43,8 @@ class MultiLabelDataset(CommonDataset):
                 labels = [np.int64(i) for i in labels]
 
                 self.labels.append(labels)
-                print(self.images[-1])
-                #assert os.path.exists(self.images[-1])
+                #print(self.images[-1])
+                assert os.path.exists(self.images[-1])
         if self.label_ratio is not False:
             return np.array(self.labels).mean(0).astype("float32")
 
