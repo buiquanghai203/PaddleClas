@@ -1,7 +1,7 @@
 # global configs
 Global:
   checkpoints: null
-  pretrained_model:  './output/resnet'
+  pretrained_model:  './output/pre_train'
   output_dir: "./output/"
   device: "gpu"
   save_interval: 5
@@ -63,7 +63,7 @@ DataLoader:
         - ResizeImage:
             size: [256, 192]
         - TimmAutoAugment:
-            prob: 0
+            prob: 0.0
             config_str: rand-m9-mstd0.5-inc1
             interpolation: bicubic
             img_size: [256, 192]
