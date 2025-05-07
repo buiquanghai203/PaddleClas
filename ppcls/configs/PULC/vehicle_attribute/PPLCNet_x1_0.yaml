@@ -53,8 +53,8 @@ DataLoader:
   Train:
     dataset:
       name: MultiLabelDataset
-      image_root: "dataset/Car_brand_vn/Public/Public/"
-      cls_label_path: "dataset/Car_brand_vn/Public/Public/train_list.txt"
+      image_root: "dataset/Car_brand_vn2/"
+      cls_label_path: "dataset/Car_brand_vn2/train_list.txt"
       label_ratio: True
       transform_ops:
         - DecodeImage:
@@ -99,8 +99,8 @@ DataLoader:
   Eval:
     dataset:
       name: MultiLabelDataset
-      image_root: "dataset/Car_brand_vn/Public/Public/"
-      cls_label_path: "dataset/Car_brand_vn/Public/Public/test_list.txt"
+      image_root: "dataset/Car_brand_vn2/"
+      cls_label_path: "dataset/Car_brand_vn2/test_list.txt"
       label_ratio: True
       transform_ops:
         - DecodeImage:
