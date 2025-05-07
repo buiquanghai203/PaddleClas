@@ -29,4 +29,5 @@ PostProcess:
   VehicleAttribute:
     color_threshold: 0.5
     type_threshold: 0.5
+    brand_threshold: 0.5
   

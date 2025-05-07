@@ -1,7 +1,7 @@
 # global configs
 Global:
   checkpoints: null
-  pretrained_model:  './output/pre_train'
+  pretrained_model:  './output/pre_train_type'
   output_dir: "./output/"
   device: "gpu"
   save_interval: 5
@@ -19,7 +19,7 @@ Global:
 Arch:
   name: "PPLCNet_x1_0"
   pretrained: True
-  class_num: 19
+  class_num: 28
   use_ssld: True
   lr_mult_list: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
   infer_add_softmax: False
@@ -53,8 +53,8 @@ DataLoader:
   Train:
     dataset:
       name: MultiLabelDataset
-      image_root: "dataset/Car_Type/"
-      cls_label_path: "dataset/Car_Type/train_list.txt"
+      image_root: "dataset/Car_brand_vn/Public/Public/"
+      cls_label_path: "dataset/Car_brand_vn/Public/Public/train_list.txt"
       label_ratio: True
       transform_ops:
         - DecodeImage:
@@ -99,8 +99,8 @@ DataLoader:
   Eval:
     dataset:
       name: MultiLabelDataset
-      image_root: "dataset/Car_Type/"
-      cls_label_path: "dataset/Car_Type/valid_list.txt"
+      image_root: "dataset/Car_brand_vn/Public/Public/"
+      cls_label_path: "dataset/Car_brand_vn/Public/Public/test_list.txt"
       label_ratio: True
       transform_ops:
         - DecodeImage:
@@ -141,6 +141,7 @@ Infer:
     name: VehicleAttribute
     color_threshold: 0.5
     type_threshold: 0.5
+    brand_threshold: 0.5
 
 Metric:
   Eval:

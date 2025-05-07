@@ -18,7 +18,7 @@ Global:
 # model architecture
 Arch:
   name: "DistillationModel"
-  class_num: &class_num 19
+  class_num: &class_num 28
   # if not null, its lengths should be same as models
   pretrained_list:
   # if not null, its lengths should be same as models
@@ -74,8 +74,8 @@ DataLoader:
   Train:
     dataset:
       name: MultiLabelDataset
-      image_root: "dataset/Car_Type/"
-      cls_label_path: "dataset/Car_Type/train_list.txt"
+      image_root: "dataset/Car_brand_vn/Public/Public/"
+      cls_label_path: "dataset/Car_brand_vn/Public/Public/train_list.txt"
       label_ratio: True
       transform_ops:
         - DecodeImage:
@@ -120,8 +120,8 @@ DataLoader:
   Eval:
     dataset:
       name: MultiLabelDataset
-      image_root: "dataset/Car_Type/"
-      cls_label_path: "dataset/Car_Type/valid_list.txt"
+      image_root: "dataset/Car_brand_vn/Public/Public/"
+      cls_label_path: "dataset/Car_brand_vn/Public/Public/test_list.txt"
       label_ratio: True
       transform_ops:
         - DecodeImage:
@@ -162,6 +162,7 @@ Infer:
     name: VehicleAttribute
     color_threshold: 0.5
     type_threshold: 0.5
+    brand_threshold: 0.5
 
 
 Metric:
