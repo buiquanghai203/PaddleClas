@@ -417,7 +417,8 @@ class FaceAttribute(object):
 
 
 class VehicleAttribute(object):
-    def __init__(self, color_threshold=0.5, type_threshold=0.5):
+    def __init__(self, color_threshold=0.5, type_threshold=0.5, brand_threshold=0.5):
+        self.brand_threshold = brand_threshold
         self.color_threshold = color_threshold
         self.type_threshold = type_threshold
         self.color_list = [
@@ -428,15 +429,27 @@ class VehicleAttribute(object):
             "sedan", "suv", "van", "hatchback", "mpv", "pickup", "bus",
             "truck", "estate"
         ]
+        self.brand_list = [
+           "Others", "Honda", "Mazda", "Mitsubishi", "Suziki", "Toyota", "Hyundai", "KIA", "VinFast"
+        ]
 
-    def __call__(self, batch_preds, file_names=None):
+    def __call__(self, x, file_names=None):
+        if isinstance(x, dict):
+            x = x['logits']
+        assert isinstance(x, paddle.Tensor)
+        if file_names is not None:
+            assert x.shape[0] == len(file_names)
+        x = F.sigmoid(x).numpy()
+
         # postprocess output of predictor
         batch_res = []
-        for res in batch_preds:
+        for idx, res in enumerate(x):
             res = res.tolist()
             label_res = []
             color_idx = np.argmax(res[:10])
-            type_idx = np.argmax(res[10:])
+            type_idx = np.argmax(res[10:19])
+            brand_idx = np.argmax(res[19:])
+            print(color_idx, type_idx, brand_idx)
             if res[color_idx] >= self.color_threshold:
                 color_info = f"Color: ({self.color_list[color_idx]}, prob: {res[color_idx]})"
             else:
@@ -447,15 +460,23 @@ class VehicleAttribute(object):
             else:
                 type_info = "Type unknown"
 
-            label_res = f"{color_info}, {type_info}"
+            if res[brand_idx + 19] >= self.brand_threshold:
+                brand_info = f"Brand: ({self.brand_list[brand_idx]}, prob: {res[brand_idx + 19]})"
+            else:
+                brand_info = "Brand unknown"
+
+            label_res = f"{color_info}, {type_info}, {brand_info}"
 
             threshold_list = [self.color_threshold
-                              ] * 10 + [self.type_threshold] * 9
+                              ] * 10 + [self.type_threshold] * 9 + [self.brand_threshold] * 9
             pred_res = (np.array(res) > np.array(threshold_list)
                         ).astype(np.int8).tolist()
-            batch_res.append({"attributes": label_res, "output": pred_res})
+            batch_res.append({
+                "attr": label_res,
+                "pred": pred_res,
+                "file_name": file_names[idx]
+            })
         return batch_res
-
 
 class TableAttribute(object):
     def __init__(
