@@ -15,18 +15,28 @@ import os
 
 import cv2
 import numpy as np
+import os
+import sys
 
-from paddleclas.deploy.utils import logger, config
-from paddleclas.deploy.utils.predictor import Predictor
-from paddleclas.deploy.utils.get_image_list import get_image_list
-from paddleclas.deploy.python.preprocess import create_operators
-from paddleclas.deploy.python.postprocess import build_postprocess
+# Add PaddleClas root directory to Python path
+root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(root_path)
+
+# from paddleclas.deploy.utils import logger, config
+# from paddleclas.deploy.utils.predictor import Predictor
+# from paddleclas.deploy.utils.get_image_list import get_image_list
+# from paddleclas.deploy.python.preprocess import create_operators
+# from paddleclas.deploy.python.postprocess import build_postprocess
+from deploy.utils import logger, config
+from deploy.utils.predictor import Predictor
+from deploy.utils.get_image_list import get_image_list
+from deploy.python.preprocess import create_operators
+from deploy.python.postprocess import build_postprocess
 
 
 class ClsPredictor(Predictor):
     def __init__(self, config):
         super().__init__(config["Global"])
-
         self.preprocess_ops = []
         self.postprocess = None
         if "PreProcess" in config:
