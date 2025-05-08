@@ -434,12 +434,15 @@ class VehicleAttribute(object):
         ]
 
     def __call__(self, x, file_names=None):
-        if isinstance(x, dict):
-            x = x['logits']
-        assert isinstance(x, paddle.Tensor)
-        if file_names is not None:
-            assert x.shape[0] == len(file_names)
-        x = F.sigmoid(x).numpy()
+        device = paddle.get_device()
+        if not isinstance(x, paddle.Tensor):
+          x = paddle.to_tensor(x, place=device)
+    
+        # Process the output
+        x = F.sigmoid(x)
+        if 'gpu' in device:
+            x = paddle.to_tensor(x, place=paddle.CPUPlace())
+        x = x.numpy()
 
         # postprocess output of predictor
         batch_res = []
