@@ -452,7 +452,7 @@ class VehicleAttribute(object):
             color_idx = np.argmax(res[:10])
             type_idx = np.argmax(res[10:19])
             brand_idx = np.argmax(res[19:])
-            print(color_idx, type_idx, brand_idx)
+            #print(color_idx, type_idx, brand_idx)
             if res[color_idx] >= self.color_threshold:
                 color_info = f"Color: ({self.color_list[color_idx]}, prob: {res[color_idx]})"
             else:
@@ -476,8 +476,8 @@ class VehicleAttribute(object):
                         ).astype(np.int8).tolist()
             batch_res.append({
                 "attr": label_res,
-                "pred": pred_res,
-                "file_name": file_names[idx]
+                "pred": pred_res
+              
             })
         return batch_res
 
