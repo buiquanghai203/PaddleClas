@@ -452,28 +452,29 @@ class VehicleAttribute(object):
             color_idx = np.argmax(res[:10])
             type_idx = np.argmax(res[10:19])
             brand_idx = np.argmax(res[19:])
+            color_pred = [0] * 10
+            type_pred = [0] * 9
+            brand_pred = [0] * 9
             #print(color_idx, type_idx, brand_idx)
             if res[color_idx] >= self.color_threshold:
                 color_info = f"Color: ({self.color_list[color_idx]}, prob: {res[color_idx]})"
+                color_pred[color_idx] = 1
             else:
                 color_info = "Color unknown"
-
             if res[type_idx + 10] >= self.type_threshold:
                 type_info = f"Type: ({self.type_list[type_idx]}, prob: {res[type_idx + 10]})"
+                type_pred[type_idx] = 1
             else:
                 type_info = "Type unknown"
-
             if res[brand_idx + 19] >= self.brand_threshold:
                 brand_info = f"Brand: ({self.brand_list[brand_idx]}, prob: {res[brand_idx + 19]})"
+                brand_pred[brand_idx] = 1
             else:
                 brand_info = "Brand unknown"
 
             label_res = f"{color_info}, {type_info}, {brand_info}"
 
-            threshold_list = [self.color_threshold
-                              ] * 10 + [self.type_threshold] * 9 + [self.brand_threshold] * 9
-            pred_res = (np.array(res) > np.array(threshold_list)
-                        ).astype(np.int8).tolist()
+            pred_res = color_pred + type_pred + brand_pred
             batch_res.append({
                 "attr": label_res,
                 "pred": pred_res
