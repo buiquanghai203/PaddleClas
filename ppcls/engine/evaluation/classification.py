@@ -148,18 +148,36 @@ def classification_eval(engine, epoch_id=0):
     if engine.use_dali:
         engine.eval_dataloader.reset()
 
+    
     if "ATTRMetric" in engine.config["Metric"]["Eval"][0]:
-        metric_msg = ", ".join([
-            "evalres: ma: {:.5f} label_f1: {:.5f} label_pos_recall: {:.5f} label_neg_recall: {:.5f} instance_f1: {:.5f} instance_acc: {:.5f} instance_prec: {:.5f} instance_recall: {:.5f}".
-            format(*engine.eval_metric_func.attr_res())
-        ])
-        logger.info("[Eval][Epoch {}][Avg]{}".format(epoch_id, metric_msg))
+        # Get AttrMeter instance
+        attr_meter = engine.eval_metric_func.metric_func_list[0].attrmeter
+        
+        # Get detailed results
+        eval_results = attr_meter.res()
+        
+        
 
-        # do not try to save best eval.model
-        if engine.eval_metric_func is None:
-            return -1
-        # return 1st metric in the dict
-        return engine.eval_metric_func.attr_res()[0]
+        # Calculate mean accuracy (ma)
+        eps = 1e-20
+        true_pos = attr_meter.overall_true_pos
+        true_neg = attr_meter.overall_true_neg
+        gt_pos = attr_meter.overall_gt_pos
+        gt_neg = attr_meter.overall_gt_neg
+        
+        # Calculate positive and negative recall
+        label_pos_recall = true_pos / (gt_pos + eps)
+        label_neg_recall = true_neg / (gt_neg + eps)
+        
+        # Calculate mean accuracy
+        ma = (label_pos_recall + label_neg_recall) / 2
+        
+        # Log ma value
+        logger.info(f"[Eval][Epoch {epoch_id}] MA: {ma:.4f}")
+        # Log the detailed results
+        logger.info("[Eval][Epoch {}] Detailed Metrics:".format(epoch_id))
+        logger.info(eval_results)
+        return ma
     else:
         metric_msg = ", ".join([
             "{}: {:.5f}".format(key, output_info[key].avg)
