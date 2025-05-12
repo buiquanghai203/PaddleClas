@@ -459,50 +459,39 @@ class AccuracyScore(MultiLabelMetric):
 
 
 def get_attr_metrics(gt_label, preds_probs, threshold):
-    """
-    index: evaluated label index
-    adapted from "https://github.com/valencebond/Rethinking_of_PAR/blob/master/metrics/pedestrian_metrics.py"
-    """
+    """Calculate metrics for each class and group"""
     pred_label = (preds_probs > threshold).astype(int)
-
     eps = 1e-20
     result = EasyDict()
 
-    has_fuyi = gt_label == -1
-    pred_label[has_fuyi] = -1
+    # Calculate metrics for each individual class
+    for idx in range(28):  # Total 28 classes
+        gt = gt_label[:, idx]
+        pred = pred_label[:, idx]
+        
+        # Individual class metrics
+        result[f'class_{idx}_gt_pos'] = np.sum((gt == 1)).astype(float)
+        result[f'class_{idx}_gt_neg'] = np.sum((gt == 0)).astype(float)
+        result[f'class_{idx}_true_pos'] = np.sum((gt == 1) * (pred == 1)).astype(float)
+        result[f'class_{idx}_true_neg'] = np.sum((gt == 0) * (pred == 0)).astype(float)
+        result[f'class_{idx}_false_pos'] = np.sum((gt == 0) * (pred == 1)).astype(float)
+        result[f'class_{idx}_false_neg'] = np.sum((gt == 1) * (pred == 0)).astype(float)
 
-    ###############################
-    # label metrics
-    # TP + FN
+    # Original overall metrics
     result.gt_pos = np.sum((gt_label == 1), axis=0).astype(float)
-    # TN + FP
     result.gt_neg = np.sum((gt_label == 0), axis=0).astype(float)
-    # TP
-    result.true_pos = np.sum((gt_label == 1) * (pred_label == 1),
-                             axis=0).astype(float)
-    # TN
-    result.true_neg = np.sum((gt_label == 0) * (pred_label == 0),
-                             axis=0).astype(float)
-    # FP
-    result.false_pos = np.sum(((gt_label == 0) * (pred_label == 1)),
-                              axis=0).astype(float)
-    # FN
-    result.false_neg = np.sum(((gt_label == 1) * (pred_label == 0)),
-                              axis=0).astype(float)
+    result.true_pos = np.sum((gt_label == 1) * (pred_label == 1), axis=0).astype(float)
+    result.true_neg = np.sum((gt_label == 0) * (pred_label == 0), axis=0).astype(float)
+    result.false_pos = np.sum(((gt_label == 0) * (pred_label == 1)), axis=0).astype(float)
+    result.false_neg = np.sum(((gt_label == 1) * (pred_label == 0)), axis=0).astype(float)
 
-    ################
-    # instance metrics
+    # Instance metrics
     result.gt_pos_ins = np.sum((gt_label == 1), axis=1).astype(float)
     result.true_pos_ins = np.sum((pred_label == 1), axis=1).astype(float)
-    # true positive
-    result.intersect_pos = np.sum((gt_label == 1) * (pred_label == 1),
-                                  axis=1).astype(float)
-    # IOU
-    result.union_pos = np.sum(((gt_label == 1) + (pred_label == 1)),
-                              axis=1).astype(float)
+    result.intersect_pos = np.sum((gt_label == 1) * (pred_label == 1), axis=1).astype(float)
+    result.union_pos = np.sum(((gt_label == 1) + (pred_label == 1)), axis=1).astype(float)
 
     return result
-
 
 class ATTRMetric(nn.Layer):
     def __init__(self, threshold=0.5):
