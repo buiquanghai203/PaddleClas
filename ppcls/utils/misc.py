@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import numpy as np
 import paddle
 
 __all__ = ['AverageMeter']
@@ -71,85 +71,188 @@ class AverageMeter(object):
             self=self)
 
 
-class AttrMeter(object):
-    """
-    Computes and stores the average and current value
-    Code was based on https://github.com/pytorch/examples/blob/master/imagenet/main.py
-    """
 
+class AttrMeter(object):
     def __init__(self, threshold=0.5):
         self.threshold = threshold
+        self.attr_names = {
+            'color': ["yellow", "orange", "green", "gray", "red", "blue", "white", "golden", "brown", "black"],
+            'type': ["sedan", "suv", "van", "hatchback", "mpv", "pickup", "bus", "truck", "estate"],
+            'brand': ["Others", "Honda", "Mazda", "Mitsubishi", "Suzuki", "Toyota", "Hyundai", "KIA", "VinFast"]
+        }
         self.reset()
 
     def reset(self):
-        self.gt_pos = 0
-        self.gt_neg = 0
-        self.true_pos = 0
-        self.true_neg = 0
-        self.false_pos = 0
-        self.false_neg = 0
+        """Initialize/reset all metrics"""
+        # Per-class metrics
+        for idx in range(28):  # Total 28 classes
+            setattr(self, f'class_{idx}_gt_pos', 0)
+            setattr(self, f'class_{idx}_gt_neg', 0)
+            setattr(self, f'class_{idx}_true_pos', 0)
+            setattr(self, f'class_{idx}_true_neg', 0)
+            setattr(self, f'class_{idx}_false_pos', 0)
+            setattr(self, f'class_{idx}_false_neg', 0)
 
+        # Overall metrics
+        self.overall_gt_pos = 0
+        self.overall_gt_neg = 0
+        self.overall_true_pos = 0
+        self.overall_true_neg = 0
+        self.overall_false_pos = 0
+        self.overall_false_neg = 0
+
+        # Instance-level metrics
         self.gt_pos_ins = []
         self.true_pos_ins = []
         self.intersect_pos = []
         self.union_pos = []
-
     def update(self, metric_dict):
-        self.gt_pos += metric_dict['gt_pos']
-        self.gt_neg += metric_dict['gt_neg']
-        self.true_pos += metric_dict['true_pos']
-        self.true_neg += metric_dict['true_neg']
-        self.false_pos += metric_dict['false_pos']
-        self.false_neg += metric_dict['false_neg']
+            """Update metrics with new batch results"""
+            # Update per-class metrics
+            for idx in range(28):
+                for metric_type in ['gt_pos', 'gt_neg', 'true_pos', 'true_neg', 'false_pos', 'false_neg']:
+                    class_metric = f'class_{idx}_{metric_type}'
+                    if class_metric in metric_dict:
+                        curr_val = getattr(self, class_metric)
+                        setattr(self, class_metric, curr_val + metric_dict[class_metric])
 
-        self.gt_pos_ins += metric_dict['gt_pos_ins'].tolist()
-        self.true_pos_ins += metric_dict['true_pos_ins'].tolist()
-        self.intersect_pos += metric_dict['intersect_pos'].tolist()
-        self.union_pos += metric_dict['union_pos'].tolist()
+            # Update overall metrics
+            self.overall_gt_pos += np.sum(metric_dict['gt_pos'])
+            self.overall_gt_neg += np.sum(metric_dict['gt_neg'])
+            self.overall_true_pos += np.sum(metric_dict['true_pos'])
+            self.overall_true_neg += np.sum(metric_dict['true_neg'])
+            self.overall_false_pos += np.sum(metric_dict['false_pos'])
+            self.overall_false_neg += np.sum(metric_dict['false_neg'])
+
+            # Update instance-level metrics
+            if 'gt_pos_ins' in metric_dict:
+                self.gt_pos_ins.extend(metric_dict['gt_pos_ins'].tolist())
+                self.true_pos_ins.extend(metric_dict['true_pos_ins'].tolist())
+                self.intersect_pos.extend(metric_dict['intersect_pos'].tolist())
+                self.union_pos.extend(metric_dict['union_pos'].tolist())
+    def calculate_per_class_metrics(self, class_idx):
+        """Calculate metrics for a specific class with its name"""
+        eps = 1e-20
+        
+        # Get class name based on index
+        if class_idx < 10:
+            class_name = self.attr_names['color'][class_idx]
+            group = 'Color'
+        elif class_idx < 19:
+            class_name = self.attr_names['type'][class_idx - 10]
+            group = 'Type'
+        else:
+            class_name = self.attr_names['brand'][class_idx - 19]
+            group = 'Brand'
+
+        # Get metrics
+        gt_pos = getattr(self, f'class_{class_idx}_gt_pos')
+        gt_neg = getattr(self, f'class_{class_idx}_gt_neg')
+        true_pos = getattr(self, f'class_{class_idx}_true_pos')
+        true_neg = getattr(self, f'class_{class_idx}_true_neg')
+        false_pos = getattr(self, f'class_{class_idx}_false_pos')
+        false_neg = getattr(self, f'class_{class_idx}_false_neg')
+
+        accuracy = (true_pos + true_neg) / (gt_pos + gt_neg + eps)
+        precision = true_pos / (true_pos + false_pos + eps)
+        recall = true_pos / (gt_pos + eps)
+        f1 = 2 * precision * recall / (precision + recall + eps)
+
+        return {
+            'name': class_name,
+            'group': group,
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'f1': f1
+        }
+
+    def calculate_group_metrics(self, group):
+        """Calculate metrics for a specific group (overall, color, type, brand)"""
+        eps = 1e-20
+
+        if group == 'overall':
+            gt_pos = self.overall_gt_pos
+            gt_neg = self.overall_gt_neg
+            true_pos = self.overall_true_pos
+            true_neg = self.overall_true_neg
+            false_pos = self.overall_false_pos
+            false_neg = self.overall_false_neg
+        else:
+            # Get index range for the group
+            start_idx = 0 if group == 'color' else (10 if group == 'type' else 19)
+            end_idx = 10 if group == 'color' else (19 if group == 'type' else 28)
+            
+            # Sum metrics for all classes in the group
+            gt_pos = sum(getattr(self, f'class_{i}_gt_pos') for i in range(start_idx, end_idx))
+            gt_neg = sum(getattr(self, f'class_{i}_gt_neg') for i in range(start_idx, end_idx))
+            true_pos = sum(getattr(self, f'class_{i}_true_pos') for i in range(start_idx, end_idx))
+            true_neg = sum(getattr(self, f'class_{i}_true_neg') for i in range(start_idx, end_idx))
+            false_pos = sum(getattr(self, f'class_{i}_false_pos') for i in range(start_idx, end_idx))
+            false_neg = sum(getattr(self, f'class_{i}_false_neg') for i in range(start_idx, end_idx))
+
+        # Calculate metrics
+        accuracy = (true_pos + true_neg) / (gt_pos + gt_neg + eps)
+        precision = true_pos / (true_pos + false_pos + eps)
+        recall = true_pos / (gt_pos + eps)
+        f1 = 2 * precision * recall / (precision + recall + eps)
+
+        return {
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'f1': f1
+        }
 
     def res(self):
-        import numpy as np
-        eps = 1e-20
-        label_pos_recall = 1.0 * self.true_pos / (
-            self.gt_pos + eps)  # true positive
-        label_neg_recall = 1.0 * self.true_neg / (
-            self.gt_neg + eps)  # true negative
-        # mean accuracy
-        label_ma = (label_pos_recall + label_neg_recall) / 2
+      def format_metrics(name, metrics, indent=0):
+          pad = " " * indent
+          return (f"{pad}{name}\n"
+                  f"{pad}{'=' * len(name)}\n"
+                  f"{pad}Accuracy : {metrics['accuracy']:.2%}\n"
+                  f"{pad}F1-Score : {metrics['f1']:.2%}\n"
+                  f"{pad}Precision: {metrics['precision']:.2%}\n"
+                  f"{pad}Recall   : {metrics['recall']:.2%}\n")
 
-        label_pos_recall = np.mean(label_pos_recall)
-        label_neg_recall = np.mean(label_neg_recall)
-        label_prec = (self.true_pos / (self.true_pos + self.false_pos + eps))
-        label_acc = (self.true_pos /
-                     (self.true_pos + self.false_pos + self.false_neg + eps))
-        label_f1 = np.mean(2 * label_prec * label_pos_recall /
-                           (label_prec + label_pos_recall + eps))
+      output = []
+      
+      # Overall Performance Section
+      overall = self.calculate_group_metrics('overall')
+      output.append("\n" + "="*50)
+      output.append("VEHICLE ATTRIBUTE CLASSIFICATION RESULTS")
+      output.append("="*50 + "\n")
+      output.append(format_metrics("OVERALL PERFORMANCE", overall))
 
-        ma = (np.mean(label_ma))
+      # Group Sections
+      groups = {
+          'color': ("COLOR ATTRIBUTES", 0, 10),
+          'type': ("VEHICLE TYPES", 10, 19),
+          'brand': ("BRAND CLASSIFICATION", 19, 28)
+      }
 
-        self.gt_pos_ins = np.array(self.gt_pos_ins)
-        self.true_pos_ins = np.array(self.true_pos_ins)
-        self.intersect_pos = np.array(self.intersect_pos)
-        self.union_pos = np.array(self.union_pos)
-        instance_acc = self.intersect_pos / (self.union_pos + eps)
-        instance_prec = self.intersect_pos / (self.true_pos_ins + eps)
-        instance_recall = self.intersect_pos / (self.gt_pos_ins + eps)
-        instance_f1 = 2 * instance_prec * instance_recall / (
-            instance_prec + instance_recall + eps)
+      for group_name, (title, start_idx, end_idx) in groups.items():
+          # Group metrics
+          group_metrics = self.calculate_group_metrics(group_name)
+          output.append("\n" + "-"*50)
+          output.append(format_metrics(title, group_metrics))
+          
+          # Individual class metrics
+          output.append("\nDetailed Class Performance:")
+          output.append("-" * 25)
+          for idx in range(start_idx, end_idx):
+              metrics = self.calculate_per_class_metrics(idx)
+              class_name = metrics['name'].upper()
+              acc = metrics['accuracy']
+              f1 = metrics['f1']
+              prec = metrics['precision']
+              rec = metrics['recall']
+              
+              # Only show classes with non-zero metrics
+              # if f1 > 0:
+              output.append(f"Class: {class_name:<10} | "
+                          f"Acc: {acc:>6.1%} | "
+                          f"F1: {f1:>6.1%} | "
+                          f"Prec: {prec:>6.1%} | "
+                          f"Rec: {rec:>6.1%}")
 
-        instance_acc = np.mean(instance_acc)
-        instance_prec = np.mean(instance_prec)
-        instance_recall = np.mean(instance_recall)
-        instance_f1 = 2 * instance_prec * instance_recall / (
-            instance_prec + instance_recall + eps)
-
-        instance_acc = np.mean(instance_acc)
-        instance_prec = np.mean(instance_prec)
-        instance_recall = np.mean(instance_recall)
-        instance_f1 = np.mean(instance_f1)
-
-        res = [
-            ma, label_f1, label_pos_recall, label_neg_recall, instance_f1,
-            instance_acc, instance_prec, instance_recall
-        ]
-        return res
+      return "\n".join(output)
