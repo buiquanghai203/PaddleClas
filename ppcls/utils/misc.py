@@ -78,14 +78,27 @@ class AttrMeter(object):
         self.attr_names = {
             'color': ["yellow", "orange", "green", "gray", "red", "blue", "white", "golden", "brown", "black"],
             'type': ["sedan", "suv", "van", "hatchback", "mpv", "pickup", "bus", "truck", "estate"],
-            'brand': ["Others", "Honda", "Mazda", "Mitsubishi", "Suzuki", "Toyota", "Hyundai", "KIA", "VinFast"]
+            'brand': ["Others", "Honda", "Mazda", "Mitsubishi", "Suzuki", "Toyota", "Hyundai", "KIA", "VinFast","Chevrolet","Ford"],
+            'model':["Others",
+              "Honda City", "Honda Civic", "Honda Accord", "Honda Odyssey",
+              "Mazda 3",  "Mazda 6", "Mazda cx3", "Mazda cx5", "Mazda cx9",
+              "Mitsubishi Attrage",  "Mitsubishi Lancer",  "Mitsubishi Pajero",
+              "Suzuki Swift", "Suzuki Wagonr",
+              "Toyota Vios", "Toyota Avalon", "Toyota Camery", "Toyota Corolla", "Toyota fj", "Toyota Fortuner", "Toyota Hiace",
+              "Toyota Hilux", "Toyota Innova", "Toyota Prado", "Toyota Rav4", "Toyota Yaris",
+              "Hyundai Accent", "Hyundai H1", "Hyundai Santafe", "Hyundai Sonata",
+              "KIA Cadenza", "KIA Cerato",  "KIA Optima", "KIA Picanto",  "KIA Rio", "KIA Sportage",
+              "VinFast E34", "VinFast Fadil", "VinFast VF3", "VinFast VF5-9",
+              "Chevrolet Aveo", "Chevrolet Impala",  "Chevrolet Malibu", "Chevrolet Silverado",  "Chevrolet Tahoe", "Chevrolet Traverse",
+              "Ford Edge", "Ford Expedition",  "Ford Explorer", "Ford F150",  "Ford Flex", "Ford Ranger", "Taurus"
+              ]
         }
         self.reset()
 
     def reset(self):
         """Initialize/reset all metrics"""
         # Per-class metrics
-        for idx in range(28):  # Total 28 classes
+        for idx in range(84):  # Total 28 classes
             setattr(self, f'class_{idx}_gt_pos', 0)
             setattr(self, f'class_{idx}_gt_neg', 0)
             setattr(self, f'class_{idx}_true_pos', 0)
@@ -109,7 +122,7 @@ class AttrMeter(object):
     def update(self, metric_dict):
             """Update metrics with new batch results"""
             # Update per-class metrics
-            for idx in range(28):
+            for idx in range(84):
                 for metric_type in ['gt_pos', 'gt_neg', 'true_pos', 'true_neg', 'false_pos', 'false_neg']:
                     class_metric = f'class_{idx}_{metric_type}'
                     if class_metric in metric_dict:
@@ -141,9 +154,12 @@ class AttrMeter(object):
         elif class_idx < 19:
             class_name = self.attr_names['type'][class_idx - 10]
             group = 'Type'
-        else:
+        elif class_idx < 30:
             class_name = self.attr_names['brand'][class_idx - 19]
             group = 'Brand'
+        else:
+            class_name = self.attr_names['model'][class_idx - 30]
+            group = 'Model'
 
         # Get metrics
         gt_pos = getattr(self, f'class_{class_idx}_gt_pos')
@@ -179,11 +195,17 @@ class AttrMeter(object):
             false_pos = self.overall_false_pos
             false_neg = self.overall_false_neg
         else:
-            # Get index range for the group
-            start_idx = 0 if group == 'color' else (10 if group == 'type' else 19)
-            end_idx = 10 if group == 'color' else (19 if group == 'type' else 28)
-            
-            # Sum metrics for all classes in the group
+            group_indices = {
+                'color': (0, 10),
+                'type': (10, 19),
+                'brand': (19, 30),
+                'model': (30, 84)  # Giả sử model có tổng cộng 44 loại
+            }
+
+            # Lấy khoảng chỉ số tương ứng với nhóm hiện tại
+            start_idx, end_idx = group_indices.get(group, (0, 0))
+
+            # Tính tổng các chỉ số cho tất cả các lớp trong nhóm
             gt_pos = sum(getattr(self, f'class_{i}_gt_pos') for i in range(start_idx, end_idx))
             gt_neg = sum(getattr(self, f'class_{i}_gt_neg') for i in range(start_idx, end_idx))
             true_pos = sum(getattr(self, f'class_{i}_true_pos') for i in range(start_idx, end_idx))
@@ -227,7 +249,8 @@ class AttrMeter(object):
       groups = {
           'color': ("COLOR ATTRIBUTES", 0, 10),
           'type': ("VEHICLE TYPES", 10, 19),
-          'brand': ("BRAND CLASSIFICATION", 19, 28)
+          'brand': ("BRAND CLASSIFICATION", 19, 30),
+          'model': ("MODEL CLASSIFICATION", 30, 84)
       }
 
       for group_name, (title, start_idx, end_idx) in groups.items():
@@ -249,7 +272,7 @@ class AttrMeter(object):
               
               # Only show classes with non-zero metrics
               # if f1 > 0:
-              output.append(f"Class: {class_name:<10} | "
+              output.append(f"Class: {class_name:<20} | "
                           f"Acc: {acc:>6.1%} | "
                           f"F1: {f1:>6.1%} | "
                           f"Prec: {prec:>6.1%} | "
