@@ -431,7 +431,7 @@ class VehicleAttribute(object):
             "truck", "estate"
         ]
         self.brand_list = [
-           "Others", "Honda", "Mazda", "Mitsubishi", "Suzuki", "Toyota", "Hyundai", "KIA", "VinFast"
+           "Others", "Honda", "Mazda", "Mitsubishi", "Suzuki", "Toyota", "Hyundai", "KIA", "VinFast", "Chevrolet", "Ford"
         ]
         self.model_list = [
            "Others",
