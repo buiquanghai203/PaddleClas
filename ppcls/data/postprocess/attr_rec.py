@@ -19,10 +19,11 @@ import paddle.nn.functional as F
 
 
 class VehicleAttribute(object):
-    def __init__(self, color_threshold=0.5, type_threshold=0.5, brand_threshold=0.5):
+    def __init__(self, color_threshold=0.5, type_threshold=0.5, brand_threshold=0.5, model_threshold=0.5):
         self.brand_threshold = brand_threshold
         self.color_threshold = color_threshold
         self.type_threshold = type_threshold
+        self.model_threshold = model_threshold
         self.color_list = [
             "yellow", "orange", "green", "gray", "red", "blue", "white",
             "golden", "brown", "black"
@@ -32,9 +33,22 @@ class VehicleAttribute(object):
             "truck", "estate"
         ]
         self.brand_list = [
-           "Others", "Honda", "Mazda", "Mitsubishi", "Suziki", "Toyota", "Hyundai", "KIA", "VinFast"
+           "Others", "Honda", "Mazda", "Mitsubishi", "Suzuki", "Toyota", "Hyundai", "KIA", "VinFast","Chevrolet","Ford"
         ]
-
+        self.model_list = [
+          "Others",
+          "Honda City", "Honda Civic", "Honda Accord", "Honda Odyssey",
+          "Mazda 3",  "Mazda 6", "Mazda cx3", "Mazda cx5", "Mazda cx9",
+          "Mitsubishi Attrage",  "Mitsubishi Lancer",  "Mitsubishi Pajero",
+          "Suzuki Swift", "Suzuki Wagonr",
+          "Toyota Vios", "Toyota Avalon", "Toyota Camery", "Toyota Corolla", "Toyota fj", "Toyota Fortuner", "Toyota Hiace",
+          "Toyota Hilux", "Toyota Innova", "Toyota Prado", "Toyota Rav4", "Toyota Yaris",
+          "Hyundai Accent", "Hyundai H1", "Hyundai Santafe", "Hyundai Sonata",
+          "KIA Cadenza", "KIA Cerato",  "KIA Optima", "KIA Picanto",  "KIA Rio", "KIA Sportage",
+          "VinFast E34", "VinFast Fadil", "VinFast VF3", "VinFast VF5-9",
+          "Chevrolet Aveo", "Chevrolet Impala",  "Chevrolet Malibu", "Chevrolet Silverado",  "Chevrolet Tahoe", "Chevrolet Traverse",
+          "Ford Edge", "Ford Expedition",  "Ford Explorer", "Ford F150",  "Ford Flex", "Ford Ranger", "Taurus"
+        ]
     def __call__(self, x, file_names=None):
         if isinstance(x, dict):
             x = x['logits']
@@ -51,7 +65,8 @@ class VehicleAttribute(object):
             color_idx = np.argmax(res[:10])
             type_idx = np.argmax(res[10:19])
             brand_idx = np.argmax(res[19:])
-            print(color_idx, type_idx, brand_idx)
+            model_idx = np.argmax(res[30:])
+            print(color_idx, type_idx, brand_idx, model_idx)
             if res[color_idx] >= self.color_threshold:
                 color_info = f"Color: ({self.color_list[color_idx]}, prob: {res[color_idx]})"
             else:
@@ -66,11 +81,14 @@ class VehicleAttribute(object):
                 brand_info = f"Brand: ({self.brand_list[brand_idx]}, prob: {res[brand_idx + 19]})"
             else:
                 brand_info = "Brand unknown"
-
-            label_res = f"{color_info}, {type_info}, {brand_info}"
+            if res[model_idx + 30] >= self.model_threshold:
+                model_info = f"Model: ({self.model_list[model_idx]}, prob: {res[model_idx + 30]})"
+            else:
+                model_info = "Model unknown"
+            label_res = f"{color_info}, {type_info}, {brand_info}, {model_info}"
 
             threshold_list = [self.color_threshold
-                              ] * 10 + [self.type_threshold] * 9 + [self.brand_threshold] * 9
+                              ] * 10 + [self.type_threshold] * 9 + [self.brand_threshold] * 11 + [self.model_threshold] * 54
             pred_res = (np.array(res) > np.array(threshold_list)
                         ).astype(np.int8).tolist()
             batch_res.append({
