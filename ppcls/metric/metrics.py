@@ -465,7 +465,7 @@ def get_attr_metrics(gt_label, preds_probs, threshold):
     result = EasyDict()
 
     # Calculate metrics for each individual class
-    for idx in range(28):  # Total 28 classes
+    for idx in range(84):  # Total 28 classes
         gt = gt_label[:, idx]
         pred = pred_label[:, idx]
         
